@@ -1,5 +1,4 @@
 -- Databricks notebook source
-
 SELECT * FROM `brightdataset`.`viewers`.`bright_tv_dataset_userprofiles` LIMIT 10;
 
 SELECT UserID,
