@@ -1,87 +1,50 @@
 -- Databricks notebook source
--- Checking all the columns in the table viewership
+WITH user_profiles AS(
+  SELECT UserID,
+  CASE  
+  WHEN Gender = 'None' THEN 'unknown'
+  WHEN Gender = '' THEN 'unknown'
+  WHEN Gender IS NULL THEN 'unknown'
+  ELSE Gender
+  END AS Sex,
 
-SELECT *
-FROM brightdataset.viewers.viewership_info;
+  CASE
+  WHEN Race = 'None' THEN 'unknown'
+  WHEN Race = '' THEN 'unknown'
+  WHEN Race IS NULL THEN 'unknown'
+  ELSE Race
+  END AS Ethnicity,
 
--- Checking if there is any row where in the column UserID0 is empty
+  CASE 
+  WHEN Age = 0 THEN 'infant'
+  WHEN Age BETWEEN 1 AND 12 THEN 'kids'
+  WHEN Age BETWEEN 13 AND 17 THEN 'youth'
+  WHEN Age BETWEEN 18 AND 35 THEN 'young adults'
+  WHEN Age BETWEEN 36 AND 50 THEN 'Adults'
+  WHEN Age > 50 AND Age <= 60 THEN 'Elder'
+  WHEN Age > 60 THEN 'Pensioner'
+  END AS Age_group,
 
-SELECT *
-FROM brightdataset.viewers.viewership_info
-WHERE UserID0 IS NULL
-OR userid4 IS NULL;
+  CASE 
+  WHEN Province = 'None' THEN 'Uncategorized'
+  WHEN Province = ' ' THEN 'Uncategorized'
+  WHEN Province = 'other' THEN 'Uncategorized'
+  WHEN Province IS NULL THEN 'Uncategorized'
+  ELSE Province
+  END AS Regions,
 
-SELECT *
-FROM brightdataset.viewers.viewership_info
-WHERE UserID0<>userid4;
+  CASE 
+  WHEN Email IS NOT NULL AND Email <> '' THEN 1
+  ELSE 0
+  END AS Email_flag,
 
--- Checking for duplicates
-
-SELECT COUNT (*)
- UserID0,RecordDate2
- FROM brightdataset.viewers.viewership_info
- GROUP BY UserID0,RecordDate2
- HAVING COUNT(*)>1;
-
- SELECT
- UserID0,
- RecordDate2,
- COUNT(*)AS duplicate_count
- FROM brightdataset.viewers.viewership_info
- GROUP BY 
- UserID0,
- RecordDate2
- HAVING COUNT(*)>1
- ORDER BY duplicate_count DESC;
-
- SELECT UserID0,
- TO_DATE(RecordDate2)AS watch_date,
- date_format(RecordDate2,'HH:mm:ss') AS watch_time,
- date_format(`Duration 2`,'HH:mm:ss')AS duration,
- Channel2
- FROM brightdataset.viewers.viewership_info
- WHERE UserID0=810044;
-
- WITH ranked_records AS (
-    SELECT 
-    *,
-    ROW_NUMBER()OVER(
-    PARTITION BY
-    UserID0,
-    TO_DATE(RecordDate2),
-    date_format(RecordDate2,'HH:mm:ss'),
-    date_format(`Duration 2`,'HH:mm:ss'),
-    Channel2
-    ORDER BY RecordDate2
-    )AS row_num
-    FROM brightdataset.viewers.viewership_info
+  CASE 
+  WHEN `Social Media Handle` IS NOT NULL AND `Social Media Handle` <> '' THEN 1
+  ELSE 0
+  END AS Social_media_handle_flag
+  FROM brightdataset.viewers.bright_tv_dataset_userprofiles
 )
-SELECT * EXCEPT(row_num)
-FROM ranked_records
-WHERE row_num = 1;
-
-SELECT DISTINCT *
-FROM brightdataset.viewers.viewership_info;
-
-WITH cte1 AS (
-SELECT DISTINCT *
-FROM brightdataset.viewers.viewership_info
-)
-SELECT 
-UserID0,
-TO_DATE(RecordDate2)AS watch_date,
-date_format(RecordDate2,'HH:mm:ss')AS watch_time,
-date_format(`Duration 2`,'HH:mm:ss')AS duration,
-Channel2,
-COUNT(*) AS duplicate_cnt
-FROM cte1
-WHERE UserID0= 810044
-GROUP BY ALL
-HAVING COUNT(*)>1
-ORDER BY duplicate_cnt DESC;
-
-
-
+SELECT * FROM user_profiles;
 WITH Base_viewership AS
 (SELECT
 COALESCE(UserID0, userid4) AS User_id,
@@ -137,23 +100,3 @@ END AS Tv_channel
 FROM Base_viewership
 )
 SELECT * FROM Cleaned_viewership;
-   
-
-
-
-
-
-
-    
-
-
-
-
-
-
-
-
-
-
-
-
